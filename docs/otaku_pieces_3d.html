@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Otaku Puzzle — Piece Visualizer</title>
+<style>
+  body { font-family: sans-serif; background: #f5f0eb; margin: 0; padding: 24px; color: #2c2c2a; }
+  .piece-card { background: #fff; border: 0.5px solid #d3d1c7; border-radius: 12px; padding: 14px 16px; }
+  .piece-label { font-size: 13px; font-weight: 500; color: #2c2c2a; margin-bottom: 6px; }
+  .piece-sub { font-size: 11px; color: #888780; margin-bottom: 10px; }
+  .layer-row { display: flex; gap: 20px; align-items: flex-start; }
+  .layer-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .layer-title { font-size: 10px; color: #b4b2a9; }
+  .grid { display: grid; grid-template-columns: repeat(5, 18px); grid-template-rows: repeat(5, 18px); gap: 2px; }
+  .cell { width: 18px; height: 18px; border-radius: 2px; }
+  .cell-l0 { background: #C17F50; }
+  .cell-l1 { background: #7F77DD; }
+  .cell-empty { background: #f1efe8; opacity: 0.5; }
+  .legend { display: flex; gap: 16px; align-items: center; font-size: 12px; color: #5f5e5a; margin-bottom: 20px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<h1 style="font-size: 20px; font-weight: 500; margin: 0 0 4px;">Otaku puzzle — all 9 pieces</h1>
+<p style="font-size: 13px; color: #5f5e5a; margin: 0 0 20px;">Each piece shown as two 5×5 layers.</p>
+
+<div class="legend">
+  <span><span class="swatch" style="background:#C17F50;"></span> bottom layer (layer 0)</span>
+  <span><span class="swatch" style="background:#7F77DD;"></span> top layer (layer 1)</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;" id="grid"></div>
+
+<script>
+const pieces = [
+  { name: "Piece 1 — fish (9 voxels)", sub: "9 in bottom layer, 0 in top",
+    voxels: [[0,1,0],[0,2,0],[0,3,0],[1,0,0],[1,1,0],[1,2,0],[2,0,0],[2,1,0],[3,0,0]] },
+  { name: "Piece 2 — two squares (8 voxels)", sub: "4 in bottom, 4 in top",
+    voxels: [[0,0,0],[0,1,0],[1,0,0],[1,1,0],[1,1,1],[1,2,1],[2,1,1],[2,2,1]] },
+  { name: "Piece 3 (6 voxels)", sub: "5 in bottom, 1 in top",
+    voxels: [[0,0,0],[0,0,1],[0,1,0],[0,2,0],[0,3,0],[1,0,0]] },
+  { name: "Piece 4 (5 voxels)", sub: "4 in bottom, 1 in top",
+    voxels: [[0,0,0],[0,1,0],[0,2,0],[0,2,1],[1,1,0]] },
+  { name: "Piece 5 (4 voxels)", sub: "4 in bottom, 0 in top",
+    voxels: [[0,0,0],[0,1,0],[0,2,0],[1,0,0]] },
+  { name: "Piece 6 (4 voxels)", sub: "2 in bottom, 2 in top",
+    voxels: [[0,0,0],[1,0,0],[1,0,1],[1,1,1]] },
+  { name: "Piece 7 (5 voxels)", sub: "3 in bottom, 2 in top",
+    voxels: [[0,0,0],[0,1,0],[1,0,0],[0,1,1],[0,2,1]] },
+  { name: "Piece 8 (3 voxels)", sub: "3 in bottom, 0 in top",
+    voxels: [[0,0,0],[0,1,0],[1,0,0]] },
+  { name: "Piece 9 (6 voxels)", sub: "6 in bottom, 0 in top",
+    voxels: [[0,0,0],[0,1,0],[1,0,0],[1,1,0],[1,2,0],[2,1,0]] },
+];
+
+function makeGrid(voxels, layer) {
+  const set = new Set(voxels.filter(v => v[2] === layer).map(v => v[0]+','+v[1]));
+  const el = document.createElement('div');
+  el.className = 'grid';
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell ' + (set.has(r+','+c) ? (layer===0 ? 'cell-l0' : 'cell-l1') : 'cell-empty');
+      el.appendChild(cell);
+    }
+  }
+  return el;
+}
+
+const container = document.getElementById('grid');
+pieces.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'piece-card';
+
+  const label = document.createElement('div');
+  label.className = 'piece-label';
+  label.textContent = p.name;
+  card.appendChild(label);
+
+  const sub = document.createElement('div');
+  sub.className = 'piece-sub';
+  sub.textContent = p.sub;
+  card.appendChild(sub);
+
+  const row = document.createElement('div');
+  row.className = 'layer-row';
+
+  [0, 1].forEach(layer => {
+    const wrap = document.createElement('div');
+    wrap.className = 'layer-wrap';
+    const title = document.createElement('div');
+    title.className = 'layer-title';
+    title.textContent = layer === 0 ? 'bottom layer' : 'top layer';
+    wrap.appendChild(title);
+    wrap.appendChild(makeGrid(p.voxels, layer));
+    row.appendChild(wrap);
+  });
+
+  card.appendChild(row);
+  container.appendChild(card);
+});
+</script>
+</body>
+</html>
